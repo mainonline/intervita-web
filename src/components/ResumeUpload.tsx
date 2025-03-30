@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import { motion } from "framer-motion";
 import { parseResume } from "@/pages/api/parser";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Trash2 } from "lucide-react";
+
+interface StoredResume {
+  id: string;
+  name: string;
+  uploadDate: string;
+  data: any;
+}
 
 interface ResumeUploadProps {
   onResumeProcessed: (resumeData: any) => void;
@@ -15,6 +21,54 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [storedResumes, setStoredResumes] = useState<StoredResume[]>([]);
+
+  // Load stored resumes from localStorage on component mount
+  useEffect(() => {
+    const savedResumes = localStorage.getItem("savedResumes");
+    if (savedResumes) {
+      setStoredResumes(JSON.parse(savedResumes));
+    }
+  }, []);
+
+  // Helper function to generate a unique ID
+  const generateUniqueId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  };
+
+  // Function to save resume to localStorage
+  const saveResumeToStorage = (resumeData: any) => {
+    if (!file) return;
+    
+    const newResume: StoredResume = {
+      id: generateUniqueId(),
+      name: file.name,
+      uploadDate: new Date().toISOString(),
+      data: resumeData
+    };
+    
+    const updatedResumes = [...storedResumes, newResume];
+    setStoredResumes(updatedResumes);
+    localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+    
+    return newResume;
+  };
+
+  // Function to load a stored resume
+  const loadStoredResume = (resumeId: string) => {
+    const resume = storedResumes.find(r => r.id === resumeId);
+    if (resume) {
+      onResumeProcessed(resume.data);
+    }
+  };
+
+  // Function to delete a stored resume
+  const deleteStoredResume = (resumeId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the parent onClick
+    const updatedResumes = storedResumes.filter(r => r.id !== resumeId);
+    setStoredResumes(updatedResumes);
+    localStorage.setItem("savedResumes", JSON.stringify(updatedResumes));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -48,6 +102,9 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({
           throw new Error("Resume parsing failed or returned empty data");
         }
 
+        // Save to localStorage
+        saveResumeToStorage(resumeData);
+        
         onResumeProcessed(resumeData);
       }, 500);
     } catch (error) {
@@ -59,6 +116,16 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({
       // Show error to user
       // Here you could add a toast or alert component to show errors
     }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -73,6 +140,35 @@ export const ResumeUpload: React.FC<ResumeUploadProps> = ({
             Please upload your resume/CV as a PDF file to get started with
             Intervita AI.
           </Dialog.Description>
+
+          {/* Saved Resumes Section */}
+          {storedResumes.length > 0 && !isUploading && (
+            <div className="mb-4">
+              <h3 className="text-white text-sm font-semibold mb-2">Your saved resumes:</h3>
+              <div className="max-h-40 overflow-y-auto">
+                {storedResumes.map((resume) => (
+                  <div 
+                    key={resume.id}
+                    onClick={() => loadStoredResume(resume.id)}
+                    className="flex items-center justify-between bg-gray-800 p-2 rounded mb-2 cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex-1 truncate">
+                      <p className="text-white text-sm truncate">{resume.name}</p>
+                      <p className="text-gray-400 text-xs">{formatDate(resume.uploadDate)}</p>
+                    </div>
+                    <button 
+                      onClick={(e) => deleteStoredResume(resume.id, e)}
+                      className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-gray-800 my-3"></div>
+              <p className="text-white text-xs mb-2">Or upload a new resume:</p>
+            </div>
+          )}
 
           <div className="mb-6">
             {!isUploading ? (
