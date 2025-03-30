@@ -25,7 +25,12 @@ import {
   useVoiceAssistant,
   useRoomContext,
 } from "@livekit/components-react";
-import { ConnectionState, LocalParticipant, RoomEvent, Track } from "livekit-client";
+import {
+  ConnectionState,
+  LocalParticipant,
+  RoomEvent,
+  Track,
+} from "livekit-client";
 import { QRCodeSVG } from "qrcode.react";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import tailwindTheme from "../../lib/tailwindTheme.preval";
@@ -72,14 +77,14 @@ export default function Playground({
 
   useEffect(() => {
     if (!room) return;
-    
+
     // Handler for disconnection events
     const handleDisconnect = () => {
       console.log("Room disconnected from server side");
       // Disconnect client side as well
       onConnect(false);
     };
-    
+
     // Handler for when connection state changes unexpectedly
     const handleConnectionStateChanged = (state: ConnectionState) => {
       if (state === ConnectionState.Disconnected) {
@@ -88,7 +93,7 @@ export default function Playground({
         onConnect(false);
       }
     };
-    
+
     // Listen for agent disconnection specifically
     const handleParticipantDisconnected = (participant: any) => {
       if (participant.isAgent) {
@@ -97,17 +102,20 @@ export default function Playground({
         onConnect(false);
       }
     };
-    
+
     // Add event listeners using LiveKit constants
     room.on(RoomEvent.Disconnected, handleDisconnect);
     room.on(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged);
     room.on(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
-    
+
     // Clean up listeners when component unmounts
     return () => {
       room.off(RoomEvent.Disconnected, handleDisconnect);
       room.off(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged);
-      room.off(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
+      room.off(
+        RoomEvent.ParticipantDisconnected,
+        handleParticipantDisconnected
+      );
     };
   }, [room, onConnect]);
 
@@ -275,7 +283,7 @@ export default function Playground({
   }, [room, rpcMethod, rpcPayload, voiceAssistant.agent]);
   // const testRpcConnection = useCallback(async () => {
   //   if (!voiceAssistant.agent || !room) return false;
-    
+
   //   try {
   //     const response = await room.localParticipant.performRpc({
   //       destinationIdentity: voiceAssistant.agent.identity,
@@ -329,7 +337,7 @@ export default function Playground({
               editable={roomState !== ConnectionState.Connected}
             />
           </div>
-          <div className="flex flex-col gap-2 mt-4">
+          {/* <div className="flex flex-col gap-2 mt-4">
             <div className="text-xs text-gray-500 mt-2">RPC Method</div>
             <input
               type="text"
@@ -360,7 +368,7 @@ export default function Playground({
             >
               Perform RPC Call
             </button>
-          </div>
+          </div> */}
         </ConfigurationPanelItem>
         <ConfigurationPanelItem title="Status">
           <div className="flex flex-col gap-2">
@@ -398,7 +406,7 @@ export default function Playground({
             />
           </div>
         </ConfigurationPanelItem>
-        {localVideoTrack && (
+        {/* {localVideoTrack && (
           <ConfigurationPanelItem
             title="Camera"
             deviceSelectorKind="videoinput"
@@ -410,7 +418,7 @@ export default function Playground({
               />
             </div>
           </ConfigurationPanelItem>
-        )}
+        )} */}
         {localMicTrack && (
           <ConfigurationPanelItem
             title="Microphone"
@@ -510,14 +518,14 @@ export default function Playground({
   // Add effect to handle server disconnection events
   useEffect(() => {
     if (!room) return;
-    
+
     // Handler for disconnection events
     const handleDisconnect = () => {
       console.log("Room disconnected from server side");
       // Use the same onConnect method but with false to disconnect
       onConnect(false);
     };
-    
+
     // Listen for participant disconnection events that might indicate agent left
     const handleParticipantDisconnected = (participant: any) => {
       if (participant.isAgent) {
@@ -526,15 +534,15 @@ export default function Playground({
         onConnect(false);
       }
     };
-    
+
     // Add event listeners
-    room.on('disconnected', handleDisconnect);
-    room.on('participantDisconnected', handleParticipantDisconnected);
-    
+    room.on("disconnected", handleDisconnect);
+    room.on("participantDisconnected", handleParticipantDisconnected);
+
     // Clean up listeners when component unmounts
     return () => {
-      room.off('disconnected', handleDisconnect);
-      room.off('participantDisconnected', handleParticipantDisconnected);
+      room.off("disconnected", handleDisconnect);
+      room.off("participantDisconnected", handleParticipantDisconnected);
     };
   }, [room, onConnect]);
 

@@ -54,7 +54,7 @@ export default function Home() {
             />
             <meta
               property="og:image"
-              content="https://livekit.io/images/og/agents-playground.png"
+              content="/intervita-og.png"
             />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
@@ -139,7 +139,7 @@ export function HomeInner() {
         </LiveKitRoom>
       ) : (
         <PlaygroundConnect
-          accentColor={themeColors[0]}
+          accentColor={themeColors[1] || "green"}
           onConnectClicked={(mode) => {
             handleConnect(true, mode);
           }}
