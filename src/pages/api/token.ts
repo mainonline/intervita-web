@@ -25,12 +25,19 @@ export default async function handleToken(
       return;
     }
 
-    // Get room name from query params or generate random one
-    const roomName = req.query.roomName as string || 
+    // Get room name and participant name from either query params (GET) or body (POST)
+    const method = req.method || "GET";
+    const isPost = method === "POST";
+    
+    // Extract params from either query or body based on method
+    const params = isPost ? req.body : req.query;
+    
+    // Get room name or generate random one
+    const roomName = params.roomName || 
       `room-${generateRandomAlphanumeric(4)}-${generateRandomAlphanumeric(4)}`;
     
-    // Get participant name from query params or generate random one
-    const identity = req.query.participantName as string || 
+    // Get participant name or generate random one
+    const identity = params.participantName || 
       `identity-${generateRandomAlphanumeric(4)}`;
 
     const grant: VideoGrant = {
@@ -41,11 +48,26 @@ export default async function handleToken(
       canSubscribe: true,
     };
 
-    const token = await createToken({ identity }, grant);
+    // Get resume data from request body if it's a POST request
+    const resumeData = isPost && params.resumeData ? 
+      JSON.stringify(params.resumeData) : 
+      null;
+      
+    // If no resume data is provided, return an error
+    if (!resumeData) {
+      res.status(400).json({ error: "Resume data is required" });
+      return;
+    }
+
+    const token = await createToken({ identity, metadata: resumeData }, grant);
+
     const result: TokenResult = {
       identity,
       accessToken: token,
     };
+
+    console.log("Token generated for:", identity);
+    console.log("Room name:", roomName);
 
     res.status(200).json(result);
   } catch (e) {

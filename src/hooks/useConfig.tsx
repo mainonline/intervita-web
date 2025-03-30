@@ -12,9 +12,6 @@ import React, {
 } from "react";
 
 export type AppConfig = {
-  title: string;
-  description: string;
-  github_link?: string;
   video_fit?: "cover" | "contain";
   settings: UserSettings;
   show_qr?: boolean;
@@ -40,8 +37,6 @@ export type UserSettings = {
 
 // Fallback if NEXT_PUBLIC_APP_CONFIG is not set
 const defaultConfig: AppConfig = {
-  title: "LiveKit Agents Playground",
-  description: "A playground for testing LiveKit Agents",
   video_fit: "cover",
   settings: {
     editable: true,
